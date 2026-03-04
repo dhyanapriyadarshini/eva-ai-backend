@@ -21,7 +21,7 @@ app.add_middleware(
 
 # ─── Groq Client ─────────────────────────────────────────────────────────────
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-MODEL = "llama3-8b-8192"
+MODEL = "llama-3.3-70b-versatile"
 
 # ─── Database Setup ──────────────────────────────────────────────────────────
 DB_PATH = "eva.db"
