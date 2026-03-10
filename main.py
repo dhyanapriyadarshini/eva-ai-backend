@@ -665,4 +665,3 @@ def db_status():
         "backend": "FastAPI on Render",
         "status": "All systems operational ✓"
     }
-```
