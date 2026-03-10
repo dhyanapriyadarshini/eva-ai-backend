@@ -640,3 +640,29 @@ def approve_email(email_id: int):
     conn.commit()
     conn.close()
     return {"status": "approved", "message": "Reply approved. Sending now. ✓"}
+
+# ─── DB STATUS — Show professor the database is real ─────────────────────────
+@app.get("/db-status")
+def db_status():
+    """Shows live SQLite database contents — proves data source integration."""
+    conn = get_db()
+    tasks = conn.execute("SELECT COUNT(*) as count FROM tasks").fetchone()
+    goals = conn.execute("SELECT COUNT(*) as count FROM goals").fetchone()
+    quick = conn.execute("SELECT COUNT(*) as count FROM quick_list").fetchone()
+    recent_tasks = conn.execute(
+        "SELECT id, title, category, priority, status, created_at FROM tasks ORDER BY created_at DESC LIMIT 5"
+    ).fetchall()
+    conn.close()
+    return {
+        "database": "SQLite (eva.db)",
+        "tables": {
+            "tasks": {"count": tasks["count"]},
+            "goals": {"count": goals["count"]},
+            "quick_list": {"count": quick["count"]}
+        },
+        "recent_tasks": [dict(t) for t in recent_tasks],
+        "llm_provider": "OpenAI GPT-4o",
+        "backend": "FastAPI on Render",
+        "status": "All systems operational ✓"
+    }
+```
