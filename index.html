@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Eva — Think it. Say it. Done.</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #07070f;
+    --bg2: #0e0e1c;
+    --bg3: #141428;
+    --card: #111120;
+    --card2: #191930;
+    --violet: #8b5cf6;
+    --violet2: #a78bfa;
+    --violet-glow: rgba(139,92,246,0.25);
+    --violet-dim: rgba(139,92,246,0.1);
+    --pink: #ec4899;
+    --green: #10b981;
+    --orange: #f59e0b;
+    --red: #ef4444;
+    --cyan: #06b6d4;
+    --text: #f1f0ff;
+    --text2: #8884a8;
+    --text3: #4a4870;
+    --border: rgba(255,255,255,0.06);
+    --border2: rgba(139,92,246,0.25);
+    --font-h: 'Sora', sans-serif;
+    --font-b: 'DM Sans', sans-serif;
+    --r: 14px;
+    --r-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-b);
+    min-height: 100vh;
+    max-width: 430px;
+    margin: 0 auto;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -150px; left: 50%;
+    transform: translateX(-50%);
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; flex-direction: column; min-height: calc(100vh - 68px); padding-bottom: 80px; position: relative; z-index: 1; animation: fadeUp 0.25s ease; }
+  .screen.active { display: flex; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── HEADER ── */
+  .hdr { padding: 48px 20px 16px; }
+  .hdr-eye { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--violet2); margin-bottom: 6px; font-weight: 600; }
+  .hdr-title { font-family: var(--font-h); font-size: 26px; font-weight: 700; line-height: 1.15; }
+  .hdr-sub { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+  /* ── SECTION LABEL ── */
+  .sec-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text3); padding: 14px 20px 6px; font-weight: 600; }
+
+  /* ── CARDS ── */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin: 0 16px 10px; position: relative; overflow: hidden; }
+  .card::before { content:''; position:absolute; top:0;left:0;right:0; height:1px; background: linear-gradient(90deg, transparent, rgba(139,92,246,0.3), transparent); }
+
+  /* ── TASK CARDS ── */
+  .task-card { display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--border); border-radius:var(--r-sm); padding:13px 16px; margin:0 16px 8px; transition:all 0.2s; }
+  .task-card.done { opacity:0.35; }
+  .task-card.done .task-title { text-decoration:line-through; }
+  .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .dot-work   { background:var(--violet2); box-shadow:0 0 6px var(--violet2); }
+  .dot-family { background:var(--green);   box-shadow:0 0 6px var(--green); }
+  .dot-health { background:var(--orange);  box-shadow:0 0 6px var(--orange); }
+  .dot-personal { background:var(--cyan); box-shadow:0 0 6px var(--cyan); }
+  .dot-errand { background:var(--pink);   box-shadow:0 0 6px var(--pink); }
+  .task-info { flex:1; min-width:0; }
+  .task-title { font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .task-meta  { font-size:11px; color:var(--text2); margin-top:2px; }
+  .chk { width:22px; height:22px; border-radius:50%; border:2px solid var(--border2); background:transparent; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:11px; transition:all 0.2s; }
+  .chk:hover { border-color:var(--violet); background:var(--violet-dim); }
+  .chk.done  { background:var(--violet); border-color:var(--violet); }
+
+  /* ── INPUT BAR ── */
+  .input-bar { position:fixed; bottom:68px; left:50%; transform:translateX(-50%); width:calc(100% - 32px); max-width:398px; background:var(--card2); border:1px solid var(--border2); border-radius:50px; padding:9px 10px 9px 18px; display:flex; align-items:center; gap:8px; z-index:100; box-shadow:0 0 24px rgba(139,92,246,0.12); }
+  .input-bar input { flex:1; background:transparent; border:none; outline:none; color:var(--text); font-family:var(--font-b); font-size:14px; }
+  .input-bar input::placeholder { color:var(--text2); }
+  .mic-btn { width:36px; height:36px; border-radius:50%; background:var(--bg3); border:1px solid var(--border2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; transition:all 0.2s; }
+  .mic-btn.listening { background:var(--red); border-color:var(--red); animation:micPulse 1s infinite; }
+  @keyframes micPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.5);}50%{box-shadow:0 0 0 8px rgba(239,68,68,0);} }
+  .send-btn { width:36px; height:36px; border-radius:50%; background:var(--violet); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; transition:all 0.2s; color:white; }
+  .send-btn:active { transform:scale(0.92); }
+  .send-btn:disabled { opacity:0.4; cursor:not-allowed; }
+
+  /* ── EVA BUBBLE ── */
+  .eva-bubble { margin:0 16px 10px; padding:12px 16px; background:var(--violet-dim); border:1px solid var(--border2); border-radius:var(--r); font-size:13px; color:var(--violet2); display:none; animation:fadeUp 0.3s ease; }
+  .eva-bubble.show { display:block; }
+  .eva-label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:3px; opacity:0.6; }
+
+  /* ── BOTTOM NAV ── */
+  .nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; background:rgba(7,7,15,0.97); backdrop-filter:blur(20px); border-top:1px solid var(--border); display:flex; z-index:200; height:68px; padding:0 4px; }
+  .nav-btn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; border:none; background:transparent; color:var(--text2); border-radius:var(--r-sm); transition:all 0.2s; padding:6px 2px; }
+  .nav-btn.active { color:var(--violet2); }
+  .nav-btn .ni { font-size:18px; }
+  .nav-btn .nl { font-size:9px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; }
+  .nav-btn.active .ni { filter:drop-shadow(0 0 5px var(--violet)); }
+
+  /* ── BUTTONS ── */
+  .btn-primary { display:block; margin:0 16px 16px; background:var(--violet); color:white; border:none; border-radius:50px; padding:15px; font-family:var(--font-h); font-size:15px; font-weight:600; cursor:pointer; width:calc(100% - 32px); transition:all 0.2s; box-shadow:0 4px 20px rgba(139,92,246,0.35); }
+  .btn-primary:active { transform:scale(0.97); }
+  .btn-primary:disabled { opacity:0.45; cursor:not-allowed; }
+  .btn-secondary { display:block; margin:0 16px 8px; background:var(--card2); color:var(--text); border:1px solid var(--border2); border-radius:50px; padding:13px; font-family:var(--font-h); font-size:14px; font-weight:500; cursor:pointer; width:calc(100% - 32px); transition:all 0.2s; }
+  .btn-secondary:active { transform:scale(0.97); }
+
+  /* ── LOADING ── */
+  .loading { display:none; align-items:center; gap:10px; padding:10px 20px; color:var(--text2); font-size:12px; font-style:italic; }
+  .loading.show { display:flex; }
+  .spin { width:14px; height:14px; border:2px solid var(--violet-dim); border-top-color:var(--violet); border-radius:50%; animation:spin 0.7s linear infinite; flex-shrink:0; }
+  @keyframes spin { to{transform:rotate(360deg);} }
+
+  /* ── TOAST ── */
+  .toast { position:fixed; top:18px; left:50%; transform:translateX(-50%) translateY(-70px); background:var(--card2); border:1px solid var(--border2); border-radius:50px; padding:10px 20px; font-size:13px; z-index:999; transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1); white-space:nowrap; max-width:320px; text-align:center; }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+
+  /* ── PRIORITY CARDS ── */
+  .p-card { background:var(--card); border:1px solid var(--border2); border-radius:var(--r); padding:16px; margin:0 16px 10px; display:flex; gap:14px; align-items:flex-start; }
+  .p-num { font-family:var(--font-h); font-size:34px; font-weight:800; color:var(--violet); line-height:1; min-width:34px; opacity:0.7; }
+  .p-title { font-size:15px; font-weight:600; margin-bottom:3px; }
+  .p-reason { font-size:12px; color:var(--text2); }
+  .p-urgency { display:inline-block; font-size:10px; font-weight:600; letter-spacing:1px; text-transform:uppercase; padding:2px 8px; border-radius:50px; margin-top:6px; }
+  .urgency-high   { background:rgba(239,68,68,0.15); color:#f87171; }
+  .urgency-medium { background:rgba(245,158,11,0.15); color:#fbbf24; }
+  .urgency-low    { background:rgba(16,185,129,0.15);  color:#34d399; }
+
+  .deferred-box { margin:8px 16px 0; padding:14px 16px; background:var(--card); border:1px solid var(--border); border-radius:var(--r); opacity:0.45; }
+  .deferred-lbl { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text2); margin-bottom:6px; font-weight:600; }
+  .deferred-item { font-size:13px; color:var(--text2); padding:3px 0; }
+
+  .habit-audit { margin:8px 16px 0; padding:14px 16px; background:rgba(239,68,68,0.05); border:1px solid rgba(239,68,68,0.2); border-radius:var(--r); }
+  .habit-lbl { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#f87171; margin-bottom:6px; font-weight:600; }
+  .habit-item { font-size:13px; color:#fca5a5; padding:4px 0; }
+
+  /* ── LIST ── */
+  .list-row { display:flex; align-items:center; gap:12px; padding:13px 16px; margin:0 16px 8px; background:var(--card); border:1px solid var(--border); border-radius:var(--r-sm); transition:all 0.2s; }
+  .list-row.done { opacity:0.35; }
+  .list-row.done .l-name { text-decoration:line-through; }
+  .l-chk { width:22px; height:22px; border-radius:6px; border:2px solid var(--border2); background:transparent; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px; transition:all 0.2s; }
+  .l-chk.done { background:var(--green); border-color:var(--green); }
+  .l-name { flex:1; font-size:14px; font-weight:500; }
+
+  .list-input-row { display:flex; gap:8px; margin:0 16px 8px; }
+  .list-input-row input { flex:1; background:var(--card); border:1px solid var(--border); border-radius:50px; padding:12px 18px; color:var(--text); font-family:var(--font-b); font-size:14px; outline:none; transition:border-color 0.2s; }
+  .list-input-row input:focus { border-color:var(--border2); }
+  .list-input-row input::placeholder { color:var(--text2); }
+  .add-btn { width:44px; height:44px; border-radius:50%; background:var(--violet); border:none; cursor:pointer; font-size:22px; color:white; flex-shrink:0; transition:all 0.2s; display:flex; align-items:center; justify-content:center; }
+  .add-btn:active { transform:scale(0.92); }
+
+  /* ── PLAN IT ── */
+  .plan-input-wrap { margin:0 16px 14px; background:var(--card); border:1px solid var(--border2); border-radius:var(--r); padding:16px; }
+  .plan-input-wrap textarea { width:100%; background:transparent; border:none; outline:none; color:var(--text); font-family:var(--font-b); font-size:15px; resize:none; min-height:80px; line-height:1.5; }
+  .plan-input-wrap textarea::placeholder { color:var(--text2); }
+
+  .week-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); margin:0 16px 8px; overflow:hidden; }
+  .week-hdr { padding:14px 16px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+  .week-tag { font-family:var(--font-h); font-size:11px; font-weight:700; color:var(--violet2); text-transform:uppercase; letter-spacing:1px; }
+  .week-focus { font-size:14px; font-weight:500; margin-top:2px; }
+  .week-body { padding:0 16px 14px; border-top:1px solid var(--border); display:none; }
+  .week-body.open { display:block; }
+  .week-detail { display:flex; gap:8px; align-items:center; padding:5px 0; font-size:13px; color:var(--text2); }
+
+  .milestone-row { display:flex; gap:8px; flex-wrap:wrap; margin:0 16px 8px; }
+  .m-chip { background:var(--violet-dim); border:1px solid var(--border2); border-radius:50px; padding:5px 14px; font-size:12px; color:var(--violet2); }
+
+  /* ── SMART BLOCK ── */
+  .conflict-card { background:rgba(239,68,68,0.05); border:1px solid rgba(239,68,68,0.25); border-radius:var(--r); padding:16px; margin:0 16px 10px; }
+  .conflict-badge { display:inline-block; background:rgba(239,68,68,0.15); color:#f87171; font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:3px 10px; border-radius:50px; margin-bottom:8px; }
+  .conflict-title { font-size:15px; font-weight:600; margin-bottom:4px; }
+  .conflict-sub { font-size:12px; color:var(--text2); }
+  .draft-msg { margin-top:12px; background:var(--card2); border-radius:var(--r-sm); padding:12px; font-size:13px; color:var(--text2); line-height:1.5; font-style:italic; }
+  .approve-btn { margin-top:10px; width:100%; background:var(--violet); color:white; border:none; border-radius:50px; padding:12px; font-family:var(--font-h); font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s; }
+  .approve-btn:active { transform:scale(0.97); }
+
+  /* ── EMAIL DIGEST ── */
+  .email-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px; margin:0 16px 10px; }
+  .email-card.urgent { border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.03); }
+  .email-card.sensitive { border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.03); }
+  .email-top { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:6px; }
+  .email-subject { font-size:14px; font-weight:600; }
+  .email-badge { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:3px 8px; border-radius:50px; flex-shrink:0; }
+  .badge-urgent { background:rgba(239,68,68,0.15); color:#f87171; }
+  .badge-normal { background:rgba(139,92,246,0.15); color:var(--violet2); }
+  .badge-low    { background:rgba(255,255,255,0.06); color:var(--text2); }
+  .badge-sensitive { background:rgba(245,158,11,0.2); color:#fbbf24; }
+  .email-summary { font-size:13px; color:var(--text2); margin-bottom:8px; }
+  .email-draft { background:var(--card2); border-radius:var(--r-sm); padding:10px; font-size:12px; color:var(--text2); font-style:italic; line-height:1.5; }
+  .email-actions { display:flex; gap:8px; margin-top:10px; }
+  .email-approve { flex:1; background:var(--violet); color:white; border:none; border-radius:50px; padding:10px; font-size:12px; font-weight:600; cursor:pointer; transition:all 0.2s; font-family:var(--font-h); }
+  .email-approve:active { transform:scale(0.97); }
+  .email-skip { flex:1; background:var(--card2); color:var(--text2); border:1px solid var(--border); border-radius:50px; padding:10px; font-size:12px; font-weight:500; cursor:pointer; font-family:var(--font-h); }
+  .manual-review-flag { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.25); border-radius:var(--r-sm); padding:10px; font-size:12px; color:#fbbf24; margin-top:8px; }
+
+  /* ── SHIFT IT ── */
+  .shift-input { margin:0 16px 14px; background:var(--card); border:1px solid var(--border2); border-radius:var(--r); padding:14px; }
+  .shift-input p { font-size:13px; color:var(--text2); margin-bottom:10px; }
+  .task-select-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); cursor:pointer; }
+  .task-select-row:last-child { border-bottom:none; }
+  .sel-chk { width:18px; height:18px; border-radius:4px; border:2px solid var(--border2); background:transparent; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:10px; transition:all 0.2s; }
+  .sel-chk.selected { background:var(--violet); border-color:var(--violet); }
+  .sel-label { font-size:13px; font-weight:500; }
+
+  .shift-result { margin:0 16px 10px; background:var(--card); border:1px solid var(--border2); border-radius:var(--r); padding:16px; }
+  .shift-result-title { font-family:var(--font-h); font-size:13px; font-weight:600; color:var(--violet2); margin-bottom:8px; }
+  .shift-item { padding:7px 0; border-bottom:1px solid var(--border); font-size:13px; color:var(--text2); }
+  .shift-item:last-child { border-bottom:none; }
+  .shift-flag { background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2); border-radius:var(--r-sm); padding:10px; font-size:12px; color:#fbbf24; margin-top:8px; }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align:center; padding:40px 20px; color:var(--text2); }
+  .empty .ei { font-size:38px; margin-bottom:10px; }
+  .empty p { font-size:14px; line-height:1.5; }
+
+  /* ── BADGE ── */
+  .badge { background:var(--violet); color:white; font-size:10px; font-weight:700; border-radius:50px; padding:2px 7px; margin-left:6px; }
+
+  /* ── SCROLL ── */
+  .scroll { overflow-y:auto; flex:1; padding-bottom:10px; }
+  .scroll::-webkit-scrollbar { display:none; }
+
+  /* ── TABS (for email/smart block screen) ── */
+  .tab-row { display:flex; gap:8px; padding:0 16px 12px; }
+  .tab { flex:1; padding:10px; border-radius:50px; border:1px solid var(--border); background:transparent; color:var(--text2); font-family:var(--font-h); font-size:12px; font-weight:600; cursor:pointer; transition:all 0.2s; text-align:center; }
+  .tab.active { background:var(--violet-dim); border-color:var(--border2); color:var(--violet2); }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══ TODAY ══ -->
+<div class="screen active" id="s-today">
+  <div class="hdr">
+    <div class="hdr-eye">EVA — YOUR AI ASSISTANT</div>
+    <div class="hdr-title" id="greeting">Hey. Here's your day.</div>
+    <div class="hdr-sub" id="today-date"></div>
+  </div>
+  <div id="eva-bubble" class="eva-bubble"><div class="eva-label">Eva says</div><div id="eva-text"></div></div>
+  <div class="loading" id="today-loading"><div class="spin"></div><span id="loading-msg">Eva's on it...</span></div>
+  <div id="tasks-list" class="scroll"></div>
+  <div class="input-bar">
+    <input type="text" id="speak-input" placeholder="Tell Eva what to do..." autocomplete="off"/>
+    <button class="mic-btn" id="mic-btn">🎙️</button>
+    <button class="send-btn" id="send-btn">➤</button>
+  </div>
+</div>
+
+<!-- ══ FOCUS MODE ══ -->
+<div class="screen" id="s-focus">
+  <div class="hdr">
+    <div class="hdr-eye">FOCUS MODE</div>
+    <div class="hdr-title">What actually<br/>matters right now.</div>
+    <div class="hdr-sub">Eva picks your top 3. The chaos button. ⚡</div>
+  </div>
+  <button class="btn-primary" id="focus-btn">⚡ Activate Focus Mode</button>
+  <div class="loading" id="focus-loading"><div class="spin"></div><span>Scanning your tasks...</span></div>
+  <div id="focus-results" class="scroll"></div>
+</div>
+
+<!-- ══ SHIFT IT ══ -->
+<div class="screen" id="s-shift">
+  <div class="hdr">
+    <div class="hdr-eye">SHIFT IT</div>
+    <div class="hdr-title">Day gone sideways?<br/>Eva fixes it.</div>
+    <div class="hdr-sub">Select tasks to reschedule across the next 72 hours.</div>
+  </div>
+  <div class="shift-input">
+    <p>Select tasks to reschedule:</p>
+    <div id="shift-task-list"></div>
+  </div>
+  <button class="btn-primary" id="shift-btn">🔄 Reschedule Selected</button>
+  <div class="loading" id="shift-loading"><div class="spin"></div><span>Eva scanning next 72hrs for white space...</span></div>
+  <div id="shift-results" class="scroll"></div>
+</div>
+
+<!-- ══ PLAN IT ══ -->
+<div class="screen" id="s-plan">
+  <div class="hdr">
+    <div class="hdr-eye">PLAN IT</div>
+    <div class="hdr-title">Tell Eva your goal.<br/>She'll build the plan.</div>
+    <div class="hdr-sub">Fitness, learning, anything. Be specific.</div>
+  </div>
+  <div class="plan-input-wrap">
+    <textarea id="goal-input" placeholder="e.g. Run a 5K in 3 months, early mornings only. Or: Learn French in 6 months, 20 mins a day." rows="3"></textarea>
+  </div>
+  <button class="btn-primary" id="plan-btn">✨ Build My Plan</button>
+  <div class="loading" id="plan-loading"><div class="spin"></div><span>Eva's building your plan... (~15s)</span></div>
+  <div id="plan-results" class="scroll"></div>
+</div>
+
+<!-- ══ MORE (Smart Block + Email Digest + Quick List) ══ -->
+<div class="screen" id="s-more">
+  <div class="hdr">
+    <div class="hdr-eye">MORE FEATURES</div>
+    <div class="hdr-title">Smart Block &<br/>Quick List</div>
+  </div>
+
+  <div class="tab-row">
+    <button class="tab active" onclick="switchTab('smartblock', this)">🛡 Smart Block</button>
+    <button class="tab" onclick="switchTab('quicklist', this)">🛒 Quick List</button>
+    <button class="tab" onclick="switchTab('emaildigest', this)">📧 Email</button>
+  </div>
+
+  <!-- SMART BLOCK TAB -->
+  <div id="tab-smartblock" class="scroll">
+    <div class="card" style="margin-bottom:10px;">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">Eva detects calendar clashes the moment they land and drafts the reschedule message for you.</div>
+      <input type="text" id="sb-event" placeholder="New meeting: e.g. Team Sync" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;color:var(--text);font-family:var(--font-b);font-size:13px;outline:none;margin-bottom:8px;"/>
+      <input type="text" id="sb-date" placeholder="Date: YYYY-MM-DD" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;color:var(--text);font-family:var(--font-b);font-size:13px;outline:none;margin-bottom:8px;"/>
+      <input type="text" id="sb-time" placeholder="Time: 15:00" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;color:var(--text);font-family:var(--font-b);font-size:13px;outline:none;margin-bottom:8px;"/>
+      <input type="text" id="sb-protected" placeholder="Protected: School pickup 15:15, Doctor 16:00" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;color:var(--text);font-family:var(--font-b);font-size:13px;outline:none;margin-bottom:12px;"/>
+      <button class="btn-primary" onclick="runSmartBlock()" style="margin:0;width:100%;">🛡 Check for Conflicts</button>
+    </div>
+    <div class="loading" id="sb-loading"><div class="spin"></div><span>Eva checking your calendar...</span></div>
+    <div id="sb-result"></div>
+  </div>
+
+  <!-- QUICK LIST TAB -->
+  <div id="tab-quicklist" class="scroll" style="display:none;">
+    <div class="list-input-row" style="margin-top:4px;">
+      <input type="text" id="list-input" placeholder="Add something..." autocomplete="off"/>
+      <button class="add-btn" id="list-add-btn">+</button>
+    </div>
+    <div class="loading" id="list-loading"><div class="spin"></div><span>Saving...</span></div>
+    <div class="sec-label">ITEMS <span class="badge" id="list-count">0</span></div>
+    <div id="list-items"></div>
+  </div>
+
+  <!-- EMAIL DIGEST TAB -->
+  <div id="tab-emaildigest" class="scroll" style="display:none;">
+    <div class="card" style="margin-bottom:10px;">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">Paste email subjects/snippets below — Eva summarises, flags urgent, drafts replies. She never sends without your approval.</div>
+      <textarea id="email-input" placeholder='[{"subject":"Q3 Report Approval","body":"Please review ASAP"},{"subject":"Newsletter","body":"This weeks updates"}]' rows="5" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;color:var(--text);font-family:var(--font-b);font-size:12px;outline:none;resize:none;line-height:1.5;"></textarea>
+      <button class="btn-primary" onclick="runEmailDigest()" style="margin:12px 0 0;width:100%;">📧 Process Inbox</button>
+    </div>
+    <div class="loading" id="email-loading"><div class="spin"></div><span>Eva reading your inbox...</span></div>
+    <div id="email-results"></div>
+  </div>
+</div>
+
+<!-- ══ BOTTOM NAV ══ -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="showScreen('today',this)"><span class="ni">🏠</span><span class="nl">Today</span></button>
+  <button class="nav-btn" onclick="showScreen('focus',this)"><span class="ni">⚡</span><span class="nl">Focus</span></button>
+  <button class="nav-btn" onclick="showScreen('shift',this)"><span class="ni">🔄</span><span class="nl">Shift It</span></button>
+  <button class="nav-btn" onclick="showScreen('plan',this)"><span class="ni">🎯</span><span class="nl">Plan It</span></button>
+  <button class="nav-btn" onclick="showScreen('more',this)"><span class="ni">✦</span><span class="nl">More</span></button>
+</nav>
+
+<script>
+const API = 'https://eva-ai-backend-1.onrender.com';
+
+const sassyLoaders = ["Eva's on it...","Hold tight...","Working her magic...","One sec...","She doesn't rush. But she's fast. 😏"];
+const sassyDone = ["Done. You're welcome. ✓","Added. Easy. 👊","On it.","Locked in. ✓","Saved. Now go do it."];
+
+function showToast(msg, d=3000) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),d);
+}
+function rand(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function fmt(d){if(!d)return'';const dt=new Date(d);return dt.toLocaleDateString('en-GB',{weekday:'short',month:'short',day:'numeric'});}
+function dotClass(cat){return{work:'dot-work',family:'dot-family',health:'dot-health',personal:'dot-personal',errand:'dot-errand'}[cat]||'dot-personal';}
+function setLoad(id,on,msg){const el=document.getElementById(id);el.classList.toggle('show',on);if(msg&&on){const s=el.querySelector('span');if(s)s.textContent=msg;}}
+
+// ── SCREEN NAV ──
+let selectedTasks = new Set();
+function showScreen(name,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('s-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  document.querySelector('.input-bar').style.display = name==='today'?'flex':'none';
+  if(name==='today') loadTasks();
+  if(name==='shift') loadShiftTasks();
+  if(name==='more') loadQuickList();
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).style.display='block';
+  btn.classList.add('active');
+  if(tab==='quicklist') loadQuickList();
+}
+
+// ── INIT ──
+function init(){
+  const h=new Date().getHours();
+  document.getElementById('greeting').textContent = h<12?'Good morning.':h<17?'Hey. Here\'s your day.':'Evening. Let\'s wrap up.';
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+  loadTasks();
+}
+
+// ── TASKS ──
+async function loadTasks(){
+  setLoad('today-loading',true,rand(sassyLoaders));
+  try{
+    const r=await fetch(`${API}/tasks`);
+    const tasks=await r.json();
+    renderTasks(tasks);
+  }catch(e){showToast("Couldn't load tasks. Eva's annoyed. 😤");}
+  finally{setLoad('today-loading',false);}
+}
+
+function renderTasks(tasks){
+  const el=document.getElementById('tasks-list');
+  if(!tasks.length){
+    el.innerHTML=`<div class="empty"><div class="ei">✨</div><p>Nothing pending.<br/>Tell Eva what needs doing.</p></div>`;
+    return;
+  }
+  el.innerHTML=tasks.map(t=>`
+    <div class="task-card ${t.status==='done'?'done':''}" id="tc-${t.id}">
+      <div class="dot ${dotClass(t.category)}"></div>
+      <div class="task-info">
+        <div class="task-title">${t.title}</div>
+        <div class="task-meta">${t.category}${t.due_date?' · '+fmt(t.due_date):''}${t.due_time?' · '+t.due_time:''}${t.reschedule_count>0?' · rescheduled '+t.reschedule_count+'x':''}</div>
+      </div>
+      <div class="chk ${t.status==='done'?'done':''}" onclick="toggleTask(${t.id},this)">${t.status==='done'?'✓':''}</div>
+    </div>`).join('');
+}
+
+async function toggleTask(id,el){
+  el.classList.toggle('done'); el.textContent=el.classList.contains('done')?'✓':'';
+  document.getElementById('tc-'+id).classList.toggle('done');
+  const status=el.classList.contains('done')?'done':'pending';
+  try{await fetch(`${API}/tasks/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});}
+  catch(e){}
+  if(status==='done')showToast('Done. ✓ Eva approves.');
+}
+
+// ── SPEAK IT ──
+async function speakIt(input){
+  if(!input.trim())return;
+  setLoad('today-loading',true,rand(sassyLoaders));
+  document.getElementById('speak-input').value='';
+  try{
+    const r=await fetch(`${API}/speak-it`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({voice_input:input})});
+    const d=await r.json();
+    if(d.status==='needs_clarification'){
+      const b=document.getElementById('eva-bubble');
+      document.getElementById('eva-text').textContent='🤔 '+d.question;
+      b.classList.add('show'); setTimeout(()=>b.classList.remove('show'),7000);
+    }else if(d.status==='created'){
+      showEvaQuip(d.eva_quip||rand(sassyDone));
+      loadTasks();
+    }
+  }catch(e){showToast("Eva couldn't process that. Try again.");}
+  finally{setLoad('today-loading',false);}
+}
+
+function showEvaQuip(msg){
+  const b=document.getElementById('eva-bubble');
+  document.getElementById('eva-text').textContent=msg;
+  b.classList.add('show'); setTimeout(()=>b.classList.remove('show'),4000);
+}
+
+document.getElementById('send-btn').addEventListener('click',()=>speakIt(document.getElementById('speak-input').value));
+document.getElementById('speak-input').addEventListener('keydown',e=>{if(e.key==='Enter')speakIt(e.target.value);});
+
+// ── VOICE ──
+let recog;
+const micBtn=document.getElementById('mic-btn');
+if('webkitSpeechRecognition'in window||'SpeechRecognition'in window){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recog=new SR(); recog.continuous=false; recog.interimResults=true; recog.lang='en-GB';
+  recog.onstart=()=>{micBtn.classList.add('listening');micBtn.textContent='🔴';document.getElementById('speak-input').placeholder='Listening...';};
+  recog.onresult=e=>{const t=Array.from(e.results).map(r=>r[0].transcript).join('');document.getElementById('speak-input').value=t;if(e.results[e.results.length-1].isFinal)speakIt(t);};
+  recog.onend=()=>{micBtn.classList.remove('listening');micBtn.textContent='🎙️';document.getElementById('speak-input').placeholder='Tell Eva what to do...';};
+  recog.onerror=()=>{micBtn.classList.remove('listening');micBtn.textContent='🎙️';showToast("Couldn't hear you. Try typing.");};
+  micBtn.addEventListener('click',()=>micBtn.classList.contains('listening')?recog.stop():recog.start());
+}else{micBtn.addEventListener('click',()=>showToast("Voice needs Chrome. Type instead! 😊"));}
+
+// ── FOCUS MODE ──
+document.getElementById('focus-btn').addEventListener('click',async()=>{
+  const btn=document.getElementById('focus-btn');
+  btn.disabled=true; btn.textContent='⚡ Activating...';
+  setLoad('focus-loading',true);
+  document.getElementById('focus-results').innerHTML='';
+  try{
+    const r=await fetch(`${API}/focus-mode`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+    const d=await r.json();
+    if(d.status==='no_tasks'){document.getElementById('focus-results').innerHTML=`<div class="empty"><div class="ei">🌿</div><p>${d.message}</p></div>`;return;}
+    const f=d.focus;
+    let html='';
+    if(f.eva_message)html+=`<div style="padding:0 16px 12px;font-size:13px;color:var(--text2);font-style:italic;">"${f.eva_message}"</div>`;
+    (f.top_3||[]).forEach((t,i)=>{
+      html+=`<div class="p-card"><div class="p-num">${i+1}</div><div><div class="p-title">${t.title}</div><div class="p-reason">${t.reason}</div><span class="p-urgency urgency-${t.urgency||'medium'}">${t.urgency||'medium'}</span></div></div>`;
+    });
+    if((f.habit_audit||[]).length){
+      html+=`<div class="habit-audit"><div class="habit-lbl">⚠️ Habit Audit</div>`;
+      f.habit_audit.forEach(h=>{html+=`<div class="habit-item">🔁 <strong>${h.title}</strong><br/>${h.message}</div>`;});
+      html+=`</div>`;
+    }
+    if((f.deferred||[]).length){
+      html+=`<div class="deferred-box"><div class="deferred-lbl">Deferred by Eva</div>`;
+      f.deferred.forEach(id=>{html+=`<div class="deferred-item">• Task #${id}</div>`;});
+      html+=`</div>`;
+    }
+    document.getElementById('focus-results').innerHTML=html;
+  }catch(e){showToast("Eva hit a snag. Try again.");}
+  finally{setLoad('focus-loading',false);btn.disabled=false;btn.textContent='⚡ Activate Focus Mode';}
+});
+
+// ── SHIFT IT ──
+async function loadShiftTasks(){
+  try{
+    const r=await fetch(`${API}/tasks?status=pending`);
+    const tasks=await r.json();
+    const el=document.getElementById('shift-task-list');
+    if(!tasks.length){el.innerHTML='<div style="font-size:13px;color:var(--text2);">No pending tasks found.</div>';return;}
+    el.innerHTML=tasks.map(t=>`
+      <div class="task-select-row" onclick="toggleSelect(${t.id},this)">
+        <div class="sel-chk" id="sel-${t.id}"></div>
+        <div class="sel-label">${t.title}${t.due_date?' · '+fmt(t.due_date):''}</div>
+      </div>`).join('');
+  }catch(e){}
+}
+
+function toggleSelect(id,row){
+  const chk=document.getElementById('sel-'+id);
+  if(selectedTasks.has(id)){selectedTasks.delete(id);chk.classList.remove('selected');chk.textContent='';}
+  else{selectedTasks.add(id);chk.classList.add('selected');chk.textContent='✓';}
+}
+
+document.getElementById('shift-btn').addEventListener('click',async()=>{
+  if(!selectedTasks.size){showToast("Select at least one task first. 🙄");return;}
+  const btn=document.getElementById('shift-btn');
+  btn.disabled=true; btn.textContent='🔄 Rescheduling...';
+  setLoad('shift-loading',true);
+  document.getElementById('shift-results').innerHTML='';
+  try{
+    const r=await fetch(`${API}/shift-it`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task_ids:[...selectedTasks]})});
+    const d=await r.json();
+    const res=d.result;
+    let html=`<div class="shift-result"><div class="shift-result-title">✓ Rescheduled</div><div style="font-size:12px;color:var(--text2);margin-bottom:10px;font-style:italic;">${res.summary||''}</div>`;
+    (res.rescheduled||[]).forEach(item=>{html+=`<div class="shift-item">📅 Task #${item.id} → ${item.new_date} at ${item.new_time}<br/><span style="font-size:11px;opacity:0.6;">${item.reason}</span></div>`;});
+    html+=`</div>`;
+    if((res.flagged||[]).length){
+      html+=`<div class="shift-flag">`;
+      res.flagged.forEach(f=>{html+=`<strong>🔁 ${f.title}</strong> (${f.reschedule_count}x rescheduled)<br/>${f.message}<br/><br/>`;});
+      html+=`</div>`;
+    }
+    document.getElementById('shift-results').innerHTML=html;
+    selectedTasks.clear();
+    loadShiftTasks(); loadTasks();
+    showToast("Tasks moved. Eva's done her thing. 👊");
+  }catch(e){showToast("Shift failed. Eva's on it.");}
+  finally{setLoad('shift-loading',false);btn.disabled=false;btn.textContent='🔄 Reschedule Selected';}
+});
+
+// ── SMART BLOCK ──
+async function runSmartBlock(){
+  const ev=document.getElementById('sb-event').value.trim();
+  const dt=document.getElementById('sb-date').value.trim();
+  const tm=document.getElementById('sb-time').value.trim();
+  const pr=document.getElementById('sb-protected').value.trim();
+  if(!ev||!dt||!tm){showToast("Fill in the event, date, and time. 🙄");return;}
+  const protected_events=pr.split(',').map(s=>s.trim()).filter(Boolean);
+  setLoad('sb-loading',true);
+  document.getElementById('sb-result').innerHTML='';
+  try{
+    const r=await fetch(`${API}/smart-block`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({new_event_title:ev,new_event_date:dt,new_event_time:tm,protected_events})});
+    const d=await r.json();
+    const res=d.result;
+    if(!res.conflict_detected){
+      document.getElementById('sb-result').innerHTML=`<div class="card"><div style="color:var(--green);font-weight:600;">✓ No conflict</div><div style="font-size:13px;color:var(--text2);margin-top:6px;">Calendar looks clear for this event.</div></div>`;
+    }else{
+      document.getElementById('sb-result').innerHTML=`
+        <div class="conflict-card">
+          <div class="conflict-badge">⚠️ Conflict Detected</div>
+          <div class="conflict-title">${res.conflicting_with||'Protected event'} clashes at ${tm}</div>
+          <div class="conflict-sub">${res.eva_quip||''}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:8px;">Suggested: ${res.suggested_new_time||'reschedule needed'}</div>
+          <div class="draft-msg">${res.draft_message||''}</div>
+          <button class="approve-btn" onclick="showToast('Draft approved. Sent. ✓')">✓ Approve & Send Draft</button>
+        </div>`;
+    }
+  }catch(e){showToast("Smart Block hit a snag.");}
+  finally{setLoad('sb-loading',false);}
+}
+
+// ── QUICK LIST ──
+async function loadQuickList(){
+  setLoad('list-loading',true);
+  try{
+    const r=await fetch(`${API}/quick-list`);
+    const items=await r.json();
+    renderList(items);
+  }catch(e){}
+  finally{setLoad('list-loading',false);}
+}
+
+function renderList(items){
+  document.getElementById('list-count').textContent=items.length;
+  const el=document.getElementById('list-items');
+  if(!items.length){el.innerHTML=`<div class="empty"><div class="ei">🛒</div><p>Empty.<br/>Add the milk. You know you need it.</p></div>`;return;}
+  el.innerHTML=items.map(item=>`
+    <div class="list-row" id="li-${item.id}">
+      <div class="l-chk ${item.checked?'done':''}" onclick="checkItem(${item.id},this)">${item.checked?'✓':''}</div>
+      <div class="l-name">${item.item}</div>
+    </div>`).join('');
+}
+
+async function checkItem(id,el){
+  el.classList.add('done');el.textContent='✓';
+  document.getElementById('li-'+id).classList.add('done');
+  try{await fetch(`${API}/quick-list/${id}/check`,{method:'PUT'});setTimeout(()=>loadQuickList(),800);}
+  catch(e){}
+}
+
+document.getElementById('list-add-btn').addEventListener('click',addItem);
+document.getElementById('list-input').addEventListener('keydown',e=>{if(e.key==='Enter')addItem();});
+
+async function addItem(){
+  const input=document.getElementById('list-input');
+  const val=input.value.trim();
+  if(!val)return;
+  setLoad('list-loading',true);input.value='';
+  try{
+    const r=await fetch(`${API}/quick-list`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:val})});
+    const d=await r.json();
+    if(d.status==='duplicate')showToast("Already on there. Pay attention. 😏");
+    else{showToast("Added. 👊");loadQuickList();}
+  }catch(e){showToast("Couldn't add that.");}
+  finally{setLoad('list-loading',false);}
+}
+
+// ── PLAN IT ──
+document.getElementById('plan-btn').addEventListener('click',async()=>{
+  const goal=document.getElementById('goal-input').value.trim();
+  if(!goal){showToast("Tell Eva the goal first. 🙄");return;}
+  const btn=document.getElementById('plan-btn');
+  btn.disabled=true;btn.textContent='✨ Building...';
+  setLoad('plan-loading',true);
+  document.getElementById('plan-results').innerHTML='';
+  try{
+    const r=await fetch(`${API}/plan-it`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({goal})});
+    const d=await r.json();
+    const p=d.plan;
+    let html=`<div class="card"><div style="font-family:var(--font-h);font-size:17px;font-weight:700;margin-bottom:4px;">${p.goal_title}</div><div style="font-size:11px;color:var(--violet2);margin-bottom:8px;">Target: ${fmt(p.target_date)}</div><div style="font-size:13px;color:var(--text2);line-height:1.5;">${p.summary}</div></div>`;
+    if(p.snooze_warning)html+=`<div style="margin:0 16px 10px;padding:12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:var(--r);font-size:12px;color:#fbbf24;">⚠️ ${p.snooze_warning}</div>`;
+    html+=`<div class="sec-label">WEEKLY BREAKDOWN</div>`;
+    (p.weekly_sessions||[]).forEach(w=>{
+      html+=`<div class="week-card"><div class="week-hdr" onclick="this.nextElementSibling.classList.toggle('open')"><div><div class="week-tag">Week ${w.week} ${w.protected?'🔒':''}</div><div class="week-focus">${w.focus}</div></div><span style="color:var(--text2)">▾</span></div><div class="week-body"><div class="week-detail"><span>📅</span>${(w.suggested_days||[]).join(', ')}</div><div class="week-detail"><span>⏰</span>${w.suggested_time||''}</div><div class="week-detail"><span>⏱️</span>${w.session_duration_minutes} mins · ${w.sessions_per_week}x/week</div></div></div>`;
+    });
+    if((p.milestones||[]).length){html+=`<div class="sec-label">MILESTONES</div><div class="milestone-row">`;p.milestones.forEach(m=>{html+=`<div class="m-chip">Wk ${m.week}: ${m.milestone}</div>`;});html+=`</div>`;}
+    if((p.tips||[]).length){html+=`<div class="sec-label">TIPS FROM EVA</div>`;p.tips.forEach(t=>{html+=`<div style="padding:6px 16px;font-size:13px;color:var(--text2);">• ${t}</div>`;});}
+    document.getElementById('plan-results').innerHTML=html;
+    showToast("Plan built. Now actually do it. 😤");
+  }catch(e){showToast("Plan failed. Eva's surprised too.");}
+  finally{setLoad('plan-loading',false);btn.disabled=false;btn.textContent='✨ Build My Plan';}
+});
+
+// ── EMAIL DIGEST ──
+async function runEmailDigest(){
+  const raw=document.getElementById('email-input').value.trim();
+  if(!raw){showToast("Paste your emails first. 🙄");return;}
+  let emails;
+  try{emails=JSON.parse(raw);}
+  catch(e){showToast("Format should be JSON array. See placeholder.");return;}
+  setLoad('email-loading',true);
+  document.getElementById('email-results').innerHTML='';
+  try{
+    const r=await fetch(`${API}/email-digest`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({emails})});
+    const d=await r.json();
+    const dig=d.digest;
+    let html=`<div class="card" style="margin-bottom:10px;"><div style="font-style:italic;font-size:13px;color:var(--text2);">"${dig.eva_summary}"</div><div style="display:flex;gap:12px;margin-top:10px;font-size:12px;"><span style="color:#f87171;">🔴 ${dig.urgent_count} urgent</span><span style="color:var(--violet2);">🔵 ${dig.normal_count} normal</span><span style="color:var(--text2);">⚪ ${dig.low_count} low</span></div></div>`;
+    (dig.digest||[]).forEach((e,i)=>{
+      const cls=e.sensitivity==='high'?'sensitive':e.urgency==='urgent'?'urgent':'';
+      html+=`<div class="email-card ${cls}">
+        <div class="email-top">
+          <div class="email-subject">${e.subject}</div>
+          <span class="email-badge badge-${e.urgency}">${e.urgency}</span>
+        </div>
+        <div class="email-summary">${e.summary}</div>
+        ${e.requires_manual_review?`<div class="manual-review-flag">⚠️ HIGH SENSITIVITY — Manual review required.<br/>${e.manual_review_reason||''}</div>`:''}
+        ${e.draft_reply&&!e.requires_manual_review?`<div class="email-draft">${e.draft_reply}</div><div class="email-actions"><button class="email-approve" onclick="showToast('Reply approved. Sent. ✓')">✓ Approve & Send</button><button class="email-skip" onclick="this.parentElement.parentElement.remove()">Skip</button></div>`:''}
+      </div>`;
+    });
+    document.getElementById('email-results').innerHTML=html;
+  }catch(e){showToast("Email digest failed. Eva's on it.");}
+  finally{setLoad('email-loading',false);}
+}
+
+init();
+</script>
+</body>
+</html>
