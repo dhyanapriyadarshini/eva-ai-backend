@@ -7,7 +7,7 @@ import sqlite3
 import os
 import json
 from datetime import datetime
-from openai import OpenAI
+import google.generativeai as genai
 
 # ─── App Setup ───────────────────────────────────────────────────────────────
 app = FastAPI(title="Eva AI Assistant", version="2.0.0")
@@ -20,9 +20,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ─── OpenAI Client ───────────────────────────────────────────────────────────
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-MODEL = "gpt-4o"
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+client = genai.GenerativeModel("gemini-1.5-flash")
+MODEL = "gemini-1.5-flash"
 
 # Eva's core personality — used across all prompts
 EVA_PERSONA = """You are Eva — a sharp, witty AI assistant built for busy parents juggling jobs, kids, school runs, and zero time.
@@ -140,15 +140,9 @@ class ApproveEmailRequest(BaseModel):
 
 # ─── Helper: Call OpenAI ─────────────────────────────────────────────────────
 def ask_eva(prompt: str, temperature: float = 0.2) -> str:
-    response = client.chat.completions.create(
-        model=MODEL,
-        messages=[
-            {"role": "system", "content": EVA_PERSONA},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=temperature,
-    )
-    return response.choices[0].message.content.strip()
+    full_prompt = f"{EVA_PERSONA}\n\n{prompt}"
+    response = client.generate_content(full_prompt)
+    return response.text.strip()
 
 # ─── Root — serve frontend ────────────────────────────────────────────────────
 @app.get("/")
