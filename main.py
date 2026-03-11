@@ -140,9 +140,21 @@ class ApproveEmailRequest(BaseModel):
 
 # ─── Helper: Call OpenAI ─────────────────────────────────────────────────────
 def ask_eva(prompt: str, temperature: float = 0.2) -> str:
-    full_prompt = f"{EVA_PERSONA}\n\n{prompt}"
-    response = client.generate_content(full_prompt)
-    return response.text.strip()
+    try:
+        full_prompt = f"{EVA_PERSONA}\n\n{prompt}"
+        response = client.generate_content(
+            full_prompt,
+            generation_config={
+                "temperature": temperature,
+                "max_output_tokens": 2048,
+            }
+        )
+        text = response.text.strip()
+        # Clean any markdown Gemini adds
+        text = text.replace("```json", "").replace("```", "").strip()
+        return text
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gemini error: {str(e)}")
 
 # ─── Root — serve frontend ────────────────────────────────────────────────────
 @app.get("/")
