@@ -496,7 +496,23 @@ Do not include text outside the JSON."""
     conn.close()
 
     return {"status": "success", "digest": parsed}
-
+    
+# ─── DB STATUS — Proof of database for professor ──────────────────────────────
+@app.get("/db-status")
+def db_status():
+    conn = get_db()
+    tables = {}
+    for table in ["tasks", "goals", "quick_list", "smart_blocks", "email_digests"]:
+        count = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+        tables[table] = count
+    conn.close()
+    return {
+        "status": "SQLite database is live",
+        "database": "eva.db",
+        "tables": tables,
+        "message": "Eva's brain is intact. All 5 tables operational."
+    }
+    
 # ─── TASKS CRUD ───────────────────────────────────────────────────────────────
 @app.get("/tasks")
 def get_tasks(status: Optional[str] = None, category: Optional[str] = None):
