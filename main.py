@@ -20,7 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 client = genai.GenerativeModel("gemini-1.5-flash")
 MODEL = "gemini-1.5-flash"
 
@@ -150,7 +150,6 @@ def ask_eva(prompt: str, temperature: float = 0.2) -> str:
             }
         )
         text = response.text.strip()
-        # Clean any markdown Gemini adds
         text = text.replace("```json", "").replace("```", "").strip()
         return text
     except Exception as e:
