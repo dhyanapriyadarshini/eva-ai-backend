@@ -177,7 +177,7 @@ eva-ai-backend/
 
 ## Built By
 
-Rahini · Luca · Dhyana — CS Assignment Project, 2025
+Dhyana — 2026
 
 ---
 
