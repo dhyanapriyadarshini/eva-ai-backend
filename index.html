@@ -257,6 +257,7 @@
   <div class="input-bar">
     <input type="text" id="speak-input" placeholder="Tell Eva what to do..." autocomplete="off"/>
     <button class="mic-btn" id="mic-btn">🎙️</button>
+<button class="mic-btn" id="voice-toggle-btn" onclick="voiceOn=!voiceOn;this.textContent=voiceOn?'🔊':'🔇';window.speechSynthesis.cancel();" title="Toggle Eva voice">🔊</button>
     <button class="send-btn" id="send-btn">➤</button>
   </div>
 </div>
@@ -469,6 +470,7 @@ function showEvaQuip(msg){
   const b=document.getElementById('eva-bubble');
   document.getElementById('eva-text').textContent=msg;
   b.classList.add('show'); setTimeout(()=>b.classList.remove('show'),4000);
+  evaSpeak(msg);
 }
 
 document.getElementById('send-btn').addEventListener('click',()=>speakIt(document.getElementById('speak-input').value));
@@ -499,7 +501,10 @@ document.getElementById('focus-btn').addEventListener('click',async()=>{
     if(d.status==='no_tasks'){document.getElementById('focus-results').innerHTML=`<div class="empty"><div class="ei">🌿</div><p>${d.message}</p></div>`;return;}
     const f=d.focus;
     let html='';
-    if(f.eva_message)html+=`<div style="padding:0 16px 12px;font-size:13px;color:var(--text2);font-style:italic;">"${f.eva_message}"</div>`;
+    if(f.eva_message){
+  html+=`<div style="padding:0 16px 12px;font-size:13px;color:var(--text2);font-style:italic;">"${f.eva_message}"</div>`;
+  evaSpeak(f.eva_message);
+}
     (f.top_3||[]).forEach((t,i)=>{
       html+=`<div class="p-card"><div class="p-num">${i+1}</div><div><div class="p-title">${t.title}</div><div class="p-reason">${t.reason}</div><span class="p-urgency urgency-${t.urgency||'medium'}">${t.urgency||'medium'}</span></div></div>`;
     });
@@ -561,6 +566,7 @@ document.getElementById('shift-btn').addEventListener('click',async()=>{
     selectedTasks.clear();
     loadShiftTasks(); loadTasks();
     showToast("Tasks moved. Eva's done her thing. 👊");
+evaSpeak(res.summary || "Done. Rescheduled everything.");
   }catch(e){showToast("Shift failed. Eva's on it.");}
   finally{setLoad('shift-loading',false);btn.disabled=false;btn.textContent='🔄 Reschedule Selected';}
 });
@@ -699,7 +705,25 @@ async function runEmailDigest(){
   finally{setLoad('email-loading',false);}
 }
 
-init();
+// ── EVA VOICE ──
+let voiceOn = true;
+function evaSpeak(text) {
+  if (!voiceOn || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 1.05; u.pitch = 1.1; u.volume = 1;
+  window.speechSynthesis.onvoiceschanged = () => {};
+  const voices = window.speechSynthesis.getVoices();
+  const pick = voices.find(v =>
+    v.name.includes('Samantha') ||
+    v.name.includes('Google UK English Female') ||
+    v.name.includes('Karen') ||
+    v.name.includes('Moira') ||
+    v.name.includes('Serena')
+  );
+  if (pick) u.voice = pick;
+  window.speechSynthesis.speak(u);
+}
 </script>
 </body>
 </html>
